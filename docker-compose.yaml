@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+
+  api-gateway:
+    image: taitohaataja/api-gateway:latest
+    container_name: api-gateway
+    ports:
+      - "8181:8080"
+    expose:
+      - "8181"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
+    depends_on:
+      - zipkin
+      - discovery-server
+      
+  ## Zipkin
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+      
+  ## Eureka Server
+  discovery-server:
+    image: taitohaataja/discovery-server:latest
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+
+  ## Weather service
+  weather-service:
+    container_name: weather-service
+    image: taitohaataja/weather-service:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://weather:5432/weather-service
+    depends_on:
+      - discovery-server
+      - api-gateway
