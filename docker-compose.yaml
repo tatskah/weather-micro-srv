@@ -1,6 +1,13 @@
 version: '3.7'
 services:
 
+  ## Zipkin
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+      
   api-gateway:
     image: taitohaataja/api-gateway:latest
     container_name: api-gateway
@@ -15,13 +22,6 @@ services:
       - zipkin
       - discovery-server
       
-  ## Zipkin
-  zipkin:
-    image: openzipkin/zipkin
-    container_name: zipkin
-    ports:
-      - "9411:9411"
-      
   ## Eureka Server
   discovery-server:
     image: taitohaataja/discovery-server:latest
@@ -32,6 +32,19 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - zipkin
+
+  ## Notification-Service Docker Compose Config
+  notification-service:
+    container_name: notification-service
+    image: taitohaataja/notification-service:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - zipkin
+      #- broker
+      - discovery-server
+      - api-gateway
+
 
   ## Weather service
   weather-service:
